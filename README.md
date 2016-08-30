@@ -1,4 +1,22 @@
-## Preparation
+# Table of contents
+
+- [Dependencies](#dependencies)
+- [Quantification with `kallisto`](#quantification-with-kallisto)
+ * [Download and index transcripts](#download-and-index-transcripts)
+ * [Make `tx2gene` file](#make-tx2gene-file)
+ * [Run `kallisto`](#run-kallisto)
+- [Fit model in `R`](#fit-model-in-r)
+- [Basic visualisation](#basic-visualisation)
+ * [Dispersions](#dispersions)
+ * [PCA](#pca)
+ * [Overlap in expression](#overlap-in-expression)
+
+# Dependencies
+
+* `kallisto` 0.43.0
+* `R`: tximport, DESeq2, dplyr, readr, tidyr, tibble, ggplot2, gplots
+
+# Quantification with `kallisto`
 
 ```sh
 source paths
@@ -12,14 +30,10 @@ for i in *fastq.gz; do
 done | cut -f 1-2 -d "_" | sort -u > $KALL/samples
 ```
 
-## `kallisto`
-
-### Download and index transcripts
+## Download and index transcripts
 
 ```sh
 cd $KALL &&
-# ensure that this is the correct file.
-# seems like it is not because the no. of genes == no. of transcripts.
 wget ftp://ftp.ensemblgenomes.org/pub/bacteria/release-28/fasta/bacteria_0_collection/escherichia_coli_str_k_12_substr_mg1655/cdna/Escherichia_coli_str_k_12_substr_mg1655.GCA_000005845.2.28.cdna.all.fa.gz
 gunzip Escherichia_coli_str_k_12_substr_mg1655.GCA_000005845.2.28.cdna.all.fa.gz
 kallisto index -i cdna Escherichia_coli_str_k_12_substr_mg1655.GCA_000005845.2.28.cdna.all.fa
@@ -40,7 +54,7 @@ for i in `cat samples`; do
 done
 ```
 
-## Analyse in `R`
+## Fit model in `R`
 
 ```r
 library(readr)
@@ -70,6 +84,8 @@ dds <- DESeqDataSetFromTximport(txi, sampleTable, ~ treatment)
 dds <- DESeq(dds, parallel = TRUE, fitType = "local")
 ddp <- DESeq(dds, parallel = TRUE, fitType = "parametric")
 ```
+
+## Basic visualisation
 
 ### Dispersions
 
@@ -129,15 +145,13 @@ abline(h = 0)
 
 ![](https://github.com/Perugolate/ec_rnaseq2/blob/master/plots/rot.png)
 
-### Results
+### Overlap in expression
 
 ```r
 cip_res <- results(dds, alpha = 0.05, addMLE = TRUE, contrast = c("treatment", "cip", "con")) %>% subset(padj < 0.05 & abs(log2FoldChange) > 1) %>% as_tibble %>% rownames_to_column
 pex_res <- results(dds, alpha = 0.05, addMLE = TRUE, contrast = c("treatment", "pex", "con")) %>% subset(padj < 0.05 & abs(log2FoldChange) > 1) %>% as_tibble %>% rownames_to_column
 mel_res <- results(dds, alpha = 0.05, addMLE = TRUE, contrast = c("treatment", "mel", "con")) %>% subset(padj < 0.05 & abs(log2FoldChange) > 1) %>% as_tibble %>% rownames_to_column
 ```
-
-### Overlap in expression
 
 We compare the overlap in gene expression between the three treatments. Plot A shows all differentially-expressed genes regardless of sign. Plots B and C show up- and down-regulated genes respectively.
 
@@ -170,5 +184,4 @@ title("C. Down-regulated genes")
 
 ## To do
 
-sort out repo
-GOs
+- [ ] GOs
