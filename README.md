@@ -14,15 +14,60 @@
 # Dependencies
 
 * `kallisto` 0.43.0
-* `R`: tximport, DESeq2, dplyr, readr, tidyr, tibble, ggplot2, gplots
+* `R`: tximport, DESeq2, dplyr, readr, tidyr, tibble, ggplot2, gplots, GenomicFeatures
 
 # Directory structure
+
+```
+├───ec_rnaseq2/
+│       README.md
+│       plots/
+
+...
+
+├───$KALL/
+│
+└───$ADAT/
+        C1_S10_L001_R1_001.fastq.gz
+        C1_S10_L001_R2_001.fastq.gz
+        C2_S11_L001_R1_001.fastq.gz
+        C2_S11_L001_R2_001.fastq.gz
+        C3_S12_L001_R1_001.fastq.gz
+        C3_S12_L001_R2_001.fastq.gz
+        Cip1_S1_L001_R1_001.fastq.gz
+        Cip1_S1_L001_R2_001.fastq.gz
+        Cip2_S2_L001_R1_001.fastq.gz
+        Cip2_S2_L001_R2_001.fastq.gz
+        Cip3_S3_L001_R1_001.fastq.gz
+        Cip3_S3_L001_R2_001.fastq.gz
+        Mel1_S7_L001_R1_001.fastq.gz
+        Mel1_S7_L001_R2_001.fastq.gz
+        Mel2_S8_L001_R1_001.fastq.gz
+        Mel2_S8_L001_R2_001.fastq.gz
+        Mel3_S9_L001_R1_001.fastq.gz
+        Mel3_S9_L001_R2_001.fastq.gz
+        Pex1_S4_L001_R1_001.fastq.gz
+        Pex1_S4_L001_R2_001.fastq.gz
+        Pex2_S5_L001_R1_001.fastq.gz
+        Pex2_S5_L001_R2_001.fastq.gz
+        Pex3_S6_L001_R1_001.fastq.gz
+        Pex3_S6_L001_R2_001.fastq.gz
+
+```
 
 
 # Quantification with `kallisto`
 
 ```sh
-source paths
+source vars
+```
+
+```
+cat vars
+export ADAT="/path/to/fastq/"
+export KALL="/path/to/kallisto/output/"
+export R1="L001_R1_001.fastq.gz"
+export R2="L001_R2_001.fastq.gz"
 ```
 
 ```sh
@@ -67,6 +112,7 @@ library(DESeq2)
 library(cowplot) # ggplot2 themes
 library(tibble) # as_tibble()
 library(gplots) # euler diagram
+library(GenomicFeatures)
 dir <- "./"
 run <- readLines("samples")
 files <- file.path(dir, run, "abundance.tsv")
@@ -81,7 +127,7 @@ sampleTable$treatment <- tolower(sampleTable$treatment)
 sampleTable$treatment <- gsub("c[1-3]", "con", sampleTable$treatment)
 sampleTable$treatment <- gsub("[1-3]", "", sampleTable$treatment) %>% as.factor %>% relevel(ref = "con")
 rownames(sampleTable) <- sampleTable$library
-sampleTable <- select(sampleTable, -library)
+sampleTable <- dplyr::select(sampleTable, -library)
 dds <- DESeqDataSetFromTximport(txi, sampleTable, ~ treatment)
 dds <- DESeq(dds, parallel = TRUE, fitType = "local")
 ddp <- DESeq(dds, parallel = TRUE, fitType = "parametric")
@@ -121,7 +167,7 @@ pcax <- as.data.frame(pca$x)
 pcax$treatment <- sampleTable$treatment
 # this is super hacky
 prop <- summary(pca) %>% as.list %>% .$importance %>% t %>% as_tibble %>%
-  .[1:3,] %>% select(prop = starts_with("Proportion")) %>% .$prop *100
+  .[1:3,] %>% dplyr::select(prop = starts_with("Proportion")) %>% .$prop *100
 pc12 <- ggplot(pcax, aes(x=PC1, y=PC2, colour=treatment)) + geom_point(size=5) +
   xlab(paste("PC1: ", round(prop[1]), "% variance", sep = "")) +
   ylab(paste("PC2: ", round(prop[2]), "% variance", sep = "")) +
@@ -192,7 +238,18 @@ title("C. Down-regulated genes")
 
 ![](https://github.com/Perugolate/ec_rnaseq2/blob/master/plots/eul.png)
 
+### Annotated results
+
+```r
+aDB <- makeTxDbFromGFF("Escherichia_coli_str_k_12_substr_mg1655.GCA_000005845.2.28.gtf")
+gDB <- genes(aDB, columns = columns(aDB)) %>% as.data.frame %>% rownames_to_column
+cip_res_db <- inner_join(dplyr::filter(gDB, rowname %in% cip_res$rowname), cip_res)
+pex_res_db <- inner_join(dplyr::filter(gDB, rowname %in% pex_res$rowname), pex_res)
+mel_res_db <- inner_join(dplyr::filter(gDB, rowname %in% mel_res$rowname), mel_res)
+```
+
 ## To do
 
 - [ ] Annotated results
+- [ ] use rtracklayer::import() to get additional annotation fields (gene_name, protein_name etc.)
 - [ ] GOs
