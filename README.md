@@ -181,9 +181,9 @@ eul3 <- list(
   pex = filter(pex_res, sign(log2FoldChange) != 1) %>% .$rowname,
   mel = filter(mel_res, sign(log2FoldChange) != 1) %>% .$rowname
 )
-par(mfrow = c(1, 3))
+par(mfrow = c(2, 2), oma = c(0, 0, 0, 0), mar = c(0, 0, 4, 0), cex = 1.05)
 venn(eul1)
-title("A. All differentially-expressed genes")
+title("A. All DE genes")
 venn(eul2)
 title("B. Up-regulated genes")
 venn(eul3)
