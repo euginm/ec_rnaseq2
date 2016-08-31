@@ -16,6 +16,9 @@
 * `kallisto` 0.43.0
 * `R`: tximport, DESeq2, dplyr, readr, tidyr, tibble, ggplot2, gplots
 
+# Directory structure
+
+
 # Quantification with `kallisto`
 
 ```sh
@@ -42,8 +45,7 @@ kallisto index -i cdna Escherichia_coli_str_k_12_substr_mg1655.GCA_000005845.2.2
 ### Make `tx2gene` file
 
 ```sh
-grep ">" cdna.fasta | sed 's/>//g' | cut -f1,4 -d" " | sed 's/ gene:/\t/g' | sed '1 i\TXNAME\tGENE
-ID' > tx2gene.tsv
+grep ">" cdna.fasta | sed 's/>//g' | cut -f1,4 -d" " | sed 's/ gene:/\t/g' | sed '1 i\TXNAME\tGENEID' > tx2gene.tsv
 ```
 
 ### Run `kallisto`
@@ -107,6 +109,14 @@ We go with `fitType = "local"`.
 rld <- rlog(dds, fitType = "local")
 rldf <- assay(rld) %>% as.data.frame
 pca <- prcomp(t(rldf))
+plot(pca)
+```
+
+![](https://github.com/Perugolate/ec_rnaseq2/blob/master/plots/pcs.png)
+
+Let's keep the first 3 PCs.
+
+```r
 pcax <- as.data.frame(pca$x)
 pcax$treatment <- sampleTable$treatment
 # this is super hacky
@@ -184,4 +194,5 @@ title("C. Down-regulated genes")
 
 ## To do
 
+- [ ] Annotated results
 - [ ] GOs
