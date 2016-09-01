@@ -64,7 +64,7 @@ source vars
 
 ```
 cat vars
-export ADAT="/path/to/fastq/"
+export ADAT="/path/to/fastqs/"
 export KALL="/path/to/kallisto/output/"
 export R1="L001_R1_001.fastq.gz"
 export R2="L001_R2_001.fastq.gz"
