@@ -30,6 +30,7 @@
 ```
 ├───ec_rnaseq2/
 │       README.md
+│       ec2_qc.html
 │       plots/
 │       python_scripts/
 
@@ -76,8 +77,10 @@ Libraries was quantified with:
 * `HTSeq-count` with cdna, aligner - `bowtie`
 * `RSEM` with full genome, aligner - `bowtie`
 * `HTSeq-count` with full genome, aligner - `bowtie`
+
 Overview tables:
-Number of reads aligned (pseudoaligned)
+
+Number of reads aligned (pseudoaligned):
 ![](https://github.com/Perugolate/ec_rnaseq2/blob/master/plots/compare_hits.png)
 ![](https://github.com/Perugolate/ec_rnaseq2/blob/master/plots/compare_hits_bars.png)
 Note as Pex1_S4 library has more than 60% rRNA in it (rRNA-checking highlighted later), results vary massive depending on choosed reference (cdna/genome)
@@ -107,6 +110,7 @@ gunzip Escherichia_coli_str_k_12_substr_mg1655.ASM584v2.32.gtf.gz
 
 # QC
 ```r
+library(Rqc)
 qc <- rqc(path = '~/path/to/reads', pattern = '.fastq', pair = c(1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12), group = c(rep('con',6), rep('cip',6), rep('mel',6), rep('pex',6)), outdir = 'path/to/qc/output', file = 'ec2_qc.html')
 ```
 
@@ -157,7 +161,6 @@ mv $REF/tx2gene.csv $REF/tx2gene_rrna.csv
 
 Import required libraries:
 ```r
-library(Rqc)
 library(tximport)
 library(readr)
 library(DESeq2)
@@ -536,6 +539,7 @@ for (method in res){
 
 ## Overlap in gene expression between groups
 Compare the overlap in gene expression between the three treatments groups. We take only the genes with padj < 0.05 and |log2FoldChange| > 1. $\alpha =  0.05$
+
 ```r
 overlap_allsalm <- list(cip = subset(res$salmon$cip, padj < 0.05 & abs(log2FoldChange) > 1) %>% rownames,
                         mel = subset(res$salmon$mel, padj < 0.05 & abs(log2FoldChange) > 1) %>% rownames, 
